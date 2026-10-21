@@ -1,0 +1,34 @@
+{% extends 'admin/base_site.html' %}
+
+{% block breadcrumbs %}
+<div class = "breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a> &rsaquo;
+    <a href = "{% url 'admin:app_list' app_label='movies' %}"> Movies </a>&rsaquo;
+    <a href = "{% url 'admin:movies_movie_changelist' %}"> Movies </a>&rsaquo;
+    Movie Engagement
+</div>
+{% endblock %}
+{% block content %}
+<div id = "content-main">
+    <h2> Most bought movie</h2>
+    {% if most_bought %}
+        <p>
+            {{most_bought.name}} - bought {{ most_bought.purchase_count}}
+            time{{ most_bought.purchase_count|pluralize}}
+        </p>
+    {% else %}
+        <p> No movies have been bought yet. </p>
+    {% endif %}
+    <h2> Most reviewed movie</h2>
+    {% if most_reviewed %}
+        <p>
+            {{most_reviewed.name}} - reviewed {{ most_reviewed.review_count}}
+            time{{ most_reviewed.review_count|pluralize}}
+        </p>
+    {% else %}
+        <p> No movies have been reviewed yet. </p>
+    {% endif %}
+    
+
+</div>
+{% endblock %}
