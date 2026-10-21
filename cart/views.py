@@ -18,6 +18,7 @@ def purchase(request):
     order = Order()
     order.user = request.user
     order.total = cart_total
+    order.region = request.GET.get('region', 'Atlanta, GA')
     order.save()
     for movie in movies_in_cart:
         item = Item()

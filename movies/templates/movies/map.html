@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<div id="popularity-map" style="height: 480px;"></div>
+  {% if user.is_authenticated %}
+  <div class="card bg-light border-0 shadow-sm mt-3 p-3">
+    <h5>Your Recent Purchases (Verification Check)</h5>
+    <ul>
+      {% for item in template_data.user_orders %}
+        <li>Order #{{ item.order.id }}: <strong>{{ item.movie.name }}</strong> ({{ item.quantity }} copy) - Region: {{ item.order.region }}</li>
+      {% empty %}
+        <li>No purchases yet.</li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+{{ template_data.regional_data|json_script:'popularity-map-data' }}
+<script>
+    const data = JSON.parse(document.getElementById('popularity-map-data').textContent);
+    const map = L.map('popularity-map').setView(data.center || [39.8, -98.6], data.center ? 11 : 4);
+
+
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 19,
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, USGS, NOAA',
+  }).addTo(map);
+  let center = data.center ? L.latLng(data.center) : null;
+  let circle;
+  let marker;
+
+  data.forEach(function (r) {
+    L.circle([r.lat, r.lng], {radius: 90000, color: '#dc3545'}).addTo(map);
+    L.marker([r.lat, r.lng]).addTo(map).bindPopup('<b>' + r.name + '</b><br>Trending: ' + r.top_movie + ' (' + r.top_count + ')');
+  });
+</script>
+
+
+{% endblock content %}
