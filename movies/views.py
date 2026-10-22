@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Movie, Review
+from .models import Movie, Review, Rating
 from django.contrib.auth.decorators import login_required
 from cart.models import Item
-from django.db.models import Sum
+from django.db.models import Sum, Avg
 
 # Create your views here.
 
@@ -33,11 +33,21 @@ def index(request):
 def show(request, id):
     movie = Movie.objects.get(id=id)
     reviews = Review.objects.filter(movie=movie, reported=False)
+    ratings = Rating.objects.filter(movie=movie)
+
+    user_rating = None
+    if request.user.is_authenticated:
+        user_rating = ratings.filter(user=request.user).first()
 
     template_data = {}
     template_data['title'] = movie.name
     template_data['movie'] = movie
     template_data['reviews'] = reviews
+    template_data['user_rating'] = user_rating
+    template_data['rating_options'] = [1, 2, 3, 4, 5]
+    template_data['average_rating'] = ratings.aggregate(
+        average = Avg('stars')
+    )['average']
 
     return render(request, 'movies/show.html',
                   {'template_data': template_data})
@@ -103,3 +113,19 @@ def map_view(request):
         'user_orders': user_orders,
     }
     return render(request, 'movies/map.html',{'template_data':template_data})
+
+@login_required
+def rate_movie(request, id):
+    movie = get_object_or_404(Movie, id=id)
+
+    if request.method == 'POST':
+        stars = request.POST.get('stars')
+
+        if stars in ['1', '2', '3', '4', '5']:
+            Rating.objects.update_or_create(
+                movie=movie,
+                user=request.user,
+                defaults={'stars': int(stars)}
+            )
+
+    return redirect('movies.show', id=id)

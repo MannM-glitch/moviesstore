@@ -29,6 +29,51 @@
             </div>
           </form>
         </p>
+        <h3>Ratings</h3>
+
+        {% if template_data.average_rating %}
+        <p>
+          Average rating:
+          {{ template_data.average_rating|floatformat:1 }} / 5
+        </p>
+        {% else %}
+        <p>No ratings yet.</p>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+
+          {% if template_data.user_rating %}
+          <p>Your rating: {{ template_data.user_rating.stars }} / 5</p>
+          {% endif %}
+
+          <form method="POST"
+                action="{% url 'movies.rate_movie' id=template_data.movie.id %}"
+                class="mb-4">
+            {% csrf_token %}
+
+            <fieldset>
+              <legend class="fs-6">Choose your rating:</legend>
+
+              {% for stars in template_data.rating_options %}
+              <label class="me-2">
+                <input type="radio" name="stars" value="{{ stars }}" required
+                        {% if template_data.user_rating.stars == stars %}checked{% endif %}>
+                {{ stars }} *
+              </label>
+              {% endfor %}
+            </fieldset>
+
+            <button type="submit" class = "btn bg-dark text-white mt-2">
+              Save rating
+            </button>
+          </form>
+
+         {% else %}
+         <p>
+          <a href="{% url 'accounts.login' %}">Log in</a>
+          to rate this movie.
+         </p>
+         {% endif %}
         <h2>Reviews</h2>
         <hr />
         <ul class="list-group">
