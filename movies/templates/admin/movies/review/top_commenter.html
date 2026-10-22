@@ -1,0 +1,24 @@
+{% extends 'admin/base_site.html' %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a> &rsaquo;
+    <a href="{% url 'admin:app_list' app_label='movies' %}">Movies</a> &rsaquo;
+    <a href="{% url 'admin:movies_review_changelist' %}">Reviews</a> &rsaquo;
+    Top Commenter
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <h2>User with most comments</h2>
+    {% if top_commenter %}
+        <p>
+            {{ top_commenter.username }} - posted {{ top_commenter.comment_count }}
+            comment{{ top_commenter.comment_count|pluralize }}
+        </p>
+    {% else %}
+        <p>No comments have been posted yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

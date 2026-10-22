@@ -2,6 +2,7 @@ from django.contrib import admin
 from .models import Movie, Review
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count, Sum
+from django.contrib.auth.models import User
 from django.template.response import TemplateResponse
 from django.urls import path
 
@@ -55,8 +56,34 @@ class MovieAdmin(admin.ModelAdmin):
 class ReviewAdmin(admin.ModelAdmin):
     list_display = ['id', 'movie', 'user', 'reported', 'date']
     list_filter = ['reported', 'movie']
-    search_fields = ['comment', 'movie_name', 'user_username']
+    search_fields = ['comment', 'movie__name', 'user__username']
     actions= ['restore_reviews']
+    change_list_template = 'admin/movies/review/change_list.html'
+
+    def get_urls(self):
+        custom_urls = [
+            path('top-commenter/', self.admin_site.admin_view(self.top_commenter_view), name='movies_review_top_commenter'),
+        ]
+        return custom_urls + super().get_urls()
+
+    def top_commenter_view(self, request):
+        if not self.has_view_permission(request):
+            raise PermissionDenied
+
+        top_commenter = (User.objects.annotate(comment_count=Count('review')).filter(comment_count__gt=0).order_by('-comment_count', 'username').first())
+
+        context = {
+            **self.admin_site.each_context(request),
+            'title': 'Top commenter',
+            'opts': self.model._meta,
+            'top_commenter': top_commenter,
+        }
+
+        return TemplateResponse(
+            request,
+            'admin/movies/review/top_commenter.html',
+            context
+        )
 
     def restore_reviews(self, request, queryset):
         queryset.update(reported=False)
@@ -64,4 +91,4 @@ class ReviewAdmin(admin.ModelAdmin):
     
 admin.site.register(Movie, MovieAdmin)
 # Register your models here.
-admin.site.register(Review)
+admin.site.register(Review, ReviewAdmin)
